@@ -1,0 +1,31 @@
+# Fichiers temporaires
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# Données sensibles
+*.env
+*.secret
+*-info.txt
+credentials.txt
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ansible
+*.retry
+.ansible/
+
+# Docker
+docker-compose.override.yml
+
+# Templates générés (si besoin)
+# templates/*.generated
