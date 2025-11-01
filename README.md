@@ -26,7 +26,7 @@ Vaultwarden est une implémentation alternative du serveur Bitwarden, écrite en
 ### Méthode 1 : Installation rapide (recommandée)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-installer/main/install-vaultwarden.sh | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-installer/master/install-vaultwarden.sh | sudo bash -s -- \
   --domain vault.example.com \
   --email admin@example.com \
   --reverse-proxy \
@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-inst
 ### Méthode 2 : Installation avec variables d'environnement
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-installer/main/install-vaultwarden.sh -o install-vaultwarden.sh
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-installer/master/install-vaultwarden.sh -o install-vaultwarden.sh
 chmod +x install-vaultwarden.sh
 sudo DOMAIN_NAME=vault.example.com ADMIN_EMAIL=admin@example.com BEHIND_REVERSE_PROXY=true ./install-vaultwarden.sh
 ```
@@ -89,10 +89,43 @@ Voir [REVERSE_PROXY.md](REVERSE_PROXY.md) pour configurer Nginx, Caddy ou Traefi
 
 ### 4. Panel d'administration (optionnel)
 
-Si `--admin-token` est utilisé, accéder au panel admin :
+Le panel d'administration permet de :
+- Désactiver l'enregistrement de nouveaux comptes
+- Gérer les utilisateurs existants
+- Consulter les statistiques d'utilisation
+- Inviter des utilisateurs
+
+#### Option A : Activer lors de l'installation
+
+```bash
+sudo ./install-vaultwarden.sh --domain vault.example.com --admin-token
+```
+
+#### Option B : Activer après l'installation
+
+```bash
+# Télécharger le script
+curl -fsSL https://raw.githubusercontent.com/tiagomatiastm-prog/vaultwarden-installer/master/generate-admin-token.sh -o generate-admin-token.sh
+chmod +x generate-admin-token.sh
+
+# Générer et activer le token admin
+sudo ./generate-admin-token.sh
+```
+
+Le script va :
+- Générer un token sécurisé (48 bytes aléatoires)
+- Mettre à jour la configuration Docker Compose
+- Redémarrer Vaultwarden automatiquement
+- Afficher le token et l'URL d'accès
+- Sauvegarder le token dans `/root/vaultwarden-info.txt`
+
+#### Accès au panel admin
+
 ```
 https://vault.example.com/admin
 ```
+
+**IMPORTANT** : Conservez le token en lieu sûr, il donne un accès complet à l'administration !
 
 ### 5. Configuration SMTP (notifications)
 
@@ -154,11 +187,16 @@ sudo systemctl start vaultwarden
 
 ## Fichiers importants
 
-- `/opt/vaultwarden/docker-compose.yml` - Configuration Docker
-- `/opt/vaultwarden/data/` - Base de données et fichiers
-- `/etc/systemd/system/vaultwarden.service` - Service systemd
-- `/root/vaultwarden-info.txt` - Informations de connexion
-- `/var/log/vaultwarden-install.log` - Log d'installation
+- **Installation** :
+  - `install-vaultwarden.sh` - Script d'installation principal
+  - `generate-admin-token.sh` - Script pour activer le panel admin
+- **Configuration** :
+  - `/opt/vaultwarden/docker-compose.yml` - Configuration Docker
+  - `/opt/vaultwarden/data/` - Base de données et fichiers
+  - `/etc/systemd/system/vaultwarden.service` - Service systemd
+- **Informations** :
+  - `/root/vaultwarden-info.txt` - Informations de connexion et token admin
+  - `/var/log/vaultwarden-install.log` - Log d'installation
 
 ## Sécurité
 
