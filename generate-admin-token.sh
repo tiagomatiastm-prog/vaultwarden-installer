@@ -80,43 +80,18 @@ log "Backup créé : $DOCKER_COMPOSE_FILE.bak"
 # Supprimer l'ancien token s'il existe
 sed -i '/ADMIN_TOKEN=/d' "$DOCKER_COMPOSE_FILE"
 
-# Ajouter le nouveau token avant la fin de la section environment
-# Trouver la dernière ligne de environment et ajouter avant
-awk -v token="      - ADMIN_TOKEN=$ADMIN_TOKEN" '
-/^    environment:/ { in_env=1 }
-in_env && /^[^ ]/ {
-    print token
-    in_env=0
-}
-in_env && /^    [a-z]/ {
-    print token
-    in_env=0
-}
-{ print }
-' "$DOCKER_COMPOSE_FILE" > "$DOCKER_COMPOSE_FILE.tmp"
+# Ajouter le nouveau token à la fin de la section environment
+# Trouver la dernière ligne de variables d'environnement et ajouter après
+LAST_ENV_VAR=$(grep -n "^      - " "$DOCKER_COMPOSE_FILE" | tail -1 | cut -d':' -f1)
 
-# Si le token n'a pas été ajouté (cas où environment est la dernière section)
-if ! grep -q "ADMIN_TOKEN=" "$DOCKER_COMPOSE_FILE.tmp"; then
-    # Ajouter à la fin de la section environment
-    awk -v token="      - ADMIN_TOKEN=$ADMIN_TOKEN" '
-    /^    environment:/ { in_env=1 }
-    in_env && /^      - / { last_env=NR }
-    {
-        print
-        if (NR == last_env && in_env) {
-            print token
-            in_env=0
-        }
-    }
-    END {
-        if (in_env) print token
-    }
-    ' "$DOCKER_COMPOSE_FILE.bak" > "$DOCKER_COMPOSE_FILE.tmp"
+if [ -n "$LAST_ENV_VAR" ]; then
+    sed -i "${LAST_ENV_VAR}a\      - ADMIN_TOKEN=$ADMIN_TOKEN" "$DOCKER_COMPOSE_FILE"
+    log "Token admin ajouté au fichier de configuration"
+else
+    error "Impossible de trouver la section environment dans le fichier"
+    mv "$DOCKER_COMPOSE_FILE.bak" "$DOCKER_COMPOSE_FILE"
+    exit 1
 fi
-
-mv "$DOCKER_COMPOSE_FILE.tmp" "$DOCKER_COMPOSE_FILE"
-
-log "Token admin ajouté au fichier de configuration"
 
 # Redémarrer le service
 log "Redémarrage de Vaultwarden..."
